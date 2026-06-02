@@ -65,6 +65,16 @@ export const youtubePlayerParsing = async ({
 
         // Modify the original YouTube response to include deciphered URLs
         if (streamingData && videoData && videoData.streamingData) {
+            if (config.youtube_session.oauth_enabled) {
+                videoData.streamingData.formats =
+                    videoData.streamingData.formats?.filter((format) =>
+                        Boolean(format?.url)
+                    ) ?? [];
+                videoData.streamingData.adaptiveFormats =
+                    videoData.streamingData.adaptiveFormats?.filter(
+                        (format) => Boolean(format?.url),
+                    ) ?? [];
+            } else {
             const ecatcherServiceTracking = videoData.responseContext
                 ?.serviceTrackingParams.find((o: { service: string }) =>
                     o.service === "ECATCHER"
@@ -147,6 +157,7 @@ export const youtubePlayerParsing = async ({
                         format.url += "&alr=no";
                     }
                 }
+            }
             }
         }
 
