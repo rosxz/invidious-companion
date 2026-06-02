@@ -77,6 +77,29 @@ export const youtubePlayerParsing = async ({
                         (format: { url?: string } | null) =>
                             Boolean(format?.url),
                     ) ?? [];
+
+                if (
+                    videoData.streamingData.formats.length === 0 &&
+                    videoData.streamingData.adaptiveFormats.length === 0
+                ) {
+                    const oauthNoFormatsMessage =
+                        "No playable formats available with OAuth.";
+                    videoData.playabilityStatus = {
+                        status: "ERROR",
+                        reason: oauthNoFormatsMessage,
+                        errorScreen: {
+                            playerErrorMessageRenderer: {
+                                reason: {
+                                    simpleText: oauthNoFormatsMessage,
+                                },
+                                subreason: {
+                                    simpleText: oauthNoFormatsMessage,
+                                },
+                            },
+                        },
+                    };
+                    videoData.streamingData = undefined;
+                }
             } else {
             const ecatcherServiceTracking = videoData.responseContext
                 ?.serviceTrackingParams.find((o: { service: string }) =>
