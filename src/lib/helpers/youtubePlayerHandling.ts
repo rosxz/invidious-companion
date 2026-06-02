@@ -66,17 +66,96 @@ export const youtubePlayerParsing = async ({
         // Modify the original YouTube response to include deciphered URLs
         if (streamingData && videoData && videoData.streamingData) {
             if (config.youtube_session.oauth_enabled) {
-                videoData.streamingData.formats =
-                    videoData.streamingData.formats?.filter((
-                        format: { url?: string } | null,
-                    ) =>
-                        Boolean(format?.url)
-                    ) ?? [];
+                const oauthFormats = [];
+                const oauthAdaptiveFormats = [];
+
+                if (streamingData) {
+                    for (
+                        let index = 0;
+                        index < streamingData.formats.length;
+                        index++
+                    ) {
+                        const format = videoData.streamingData.formats?.[index];
+                        const streamingFormat = streamingData.formats[index];
+
+                        if (!format || !streamingFormat) {
+                            continue;
+                        }
+
+                        if (format.url) {
+                            oauthFormats.push(format);
+                            continue;
+                        }
+
+                        const hasCipher =
+                            format.signatureCipher ||
+                            streamingFormat.signature_cipher;
+                        if (!hasCipher) {
+                            continue;
+                        }
+
+                        try {
+                            format.url = await streamingFormat.decipher(
+                                innertubeClient.session.player,
+                            );
+                            oauthFormats.push(format);
+                        } catch {
+                            continue;
+                        }
+                    }
+
+                    for (
+                        let index = 0;
+                        index < streamingData.adaptive_formats.length;
+                        index++
+                    ) {
+                        const format =
+                            videoData.streamingData.adaptiveFormats?.[index];
+                        const streamingFormat =
+                            streamingData.adaptive_formats[index];
+
+                        if (!format || !streamingFormat) {
+                            continue;
+                        }
+
+                        if (format.url) {
+                            oauthAdaptiveFormats.push(format);
+                            continue;
+                        }
+
+                        const hasCipher =
+                            format.signatureCipher ||
+                            streamingFormat.signature_cipher;
+                        if (!hasCipher) {
+                            continue;
+                        }
+
+                        try {
+                            format.url = await streamingFormat.decipher(
+                                innertubeClient.session.player,
+                            );
+                            oauthAdaptiveFormats.push(format);
+                        } catch {
+                            continue;
+                        }
+                    }
+                } else {
+                    for (const format of videoData.streamingData.formats ?? []) {
+                        if (format?.url) {
+                            oauthFormats.push(format);
+                        }
+                    }
+                    for (const format of videoData.streamingData
+                        .adaptiveFormats ?? []) {
+                        if (format?.url) {
+                            oauthAdaptiveFormats.push(format);
+                        }
+                    }
+                }
+
+                videoData.streamingData.formats = oauthFormats;
                 videoData.streamingData.adaptiveFormats =
-                    videoData.streamingData.adaptiveFormats?.filter(
-                        (format: { url?: string } | null) =>
-                            Boolean(format?.url),
-                    ) ?? [];
+                    oauthAdaptiveFormats;
 
                 if (
                     videoData.streamingData.adaptiveFormats.length === 0 &&
