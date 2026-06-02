@@ -31,7 +31,7 @@ export const youtubePlayerParsing = async ({
     innertubeClient: Innertube;
     videoId: string;
     config: Config;
-    tokenMinter: TokenMinter;
+    tokenMinter: TokenMinter | undefined;
     metrics: Metrics | undefined;
     overrideCache?: boolean;
 }): Promise<object> => {
@@ -82,9 +82,23 @@ export const youtubePlayerParsing = async ({
                     index < streamingData.formats.length;
                     index++
                 ) {
-                    const format = videoData.streamingData.formats[index];
+                    const format = videoData.streamingData.formats?.[index];
+                    const streamingFormat = streamingData.formats[index];
 
-                    format.url = await streamingData.formats[index]
+                    if (!format || !streamingFormat) {
+                        continue;
+                    }
+
+                    if (
+                        !format.url &&
+                        !format.signatureCipher &&
+                        !streamingFormat.url &&
+                        !streamingFormat.signatureCipher
+                    ) {
+                        continue;
+                    }
+
+                    format.url = await streamingFormat
                         .decipher(
                             innertubeClient.session.player,
                         );
@@ -103,9 +117,24 @@ export const youtubePlayerParsing = async ({
                     index++
                 ) {
                     const format =
-                        videoData.streamingData.adaptiveFormats[index];
+                        videoData.streamingData.adaptiveFormats?.[index];
+                    const streamingFormat =
+                        streamingData.adaptive_formats[index];
 
-                    format.url = await streamingData.adaptive_formats[index]
+                    if (!format || !streamingFormat) {
+                        continue;
+                    }
+
+                    if (
+                        !format.url &&
+                        !format.signatureCipher &&
+                        !streamingFormat.url &&
+                        !streamingFormat.signatureCipher
+                    ) {
+                        continue;
+                    }
+
+                    format.url = await streamingFormat
                         .decipher(
                             innertubeClient.session.player,
                         );
