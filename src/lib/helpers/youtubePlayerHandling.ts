@@ -67,12 +67,15 @@ export const youtubePlayerParsing = async ({
         if (streamingData && videoData && videoData.streamingData) {
             if (config.youtube_session.oauth_enabled) {
                 videoData.streamingData.formats =
-                    videoData.streamingData.formats?.filter((format) =>
+                    videoData.streamingData.formats?.filter((
+                        format: { url?: string } | null,
+                    ) =>
                         Boolean(format?.url)
                     ) ?? [];
                 videoData.streamingData.adaptiveFormats =
                     videoData.streamingData.adaptiveFormats?.filter(
-                        (format) => Boolean(format?.url),
+                        (format: { url?: string } | null) =>
+                            Boolean(format?.url),
                     ) ?? [];
             } else {
             const ecatcherServiceTracking = videoData.responseContext
@@ -103,7 +106,7 @@ export const youtubePlayerParsing = async ({
                         !format.url &&
                         !format.signatureCipher &&
                         !streamingFormat.url &&
-                        !streamingFormat.signatureCipher
+                        !streamingFormat.signature_cipher
                     ) {
                         continue;
                     }
@@ -139,7 +142,7 @@ export const youtubePlayerParsing = async ({
                         !format.url &&
                         !format.signatureCipher &&
                         !streamingFormat.url &&
-                        !streamingFormat.signatureCipher
+                        !streamingFormat.signature_cipher
                     ) {
                         continue;
                     }
