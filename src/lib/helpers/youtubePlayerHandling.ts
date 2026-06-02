@@ -79,6 +79,14 @@ export const youtubePlayerParsing = async ({
                     ) ?? [];
 
                 if (
+                    videoData.streamingData.adaptiveFormats.length === 0 &&
+                    videoData.streamingData.formats.length > 0
+                ) {
+                    videoData.streamingData.adaptiveFormats =
+                        videoData.streamingData.formats;
+                }
+
+                if (
                     videoData.streamingData.formats.length === 0 &&
                     videoData.streamingData.adaptiveFormats.length === 0
                 ) {
